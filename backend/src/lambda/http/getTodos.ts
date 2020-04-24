@@ -1,13 +1,13 @@
+import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import 'source-map-support/register'
 
-import { getAllTodos } from '../../businessLogic/todos';
-
-import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
+import { getAllTodos } from '../../businessLogic/todosLogic';
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log('Processing event: ', event)
 
-  const groups = await getAllTodos()
+  // todo: it must be by userId
+  const todos = await getAllTodos(event.headers.Authorization)
 
   return {
     statusCode: 200,
@@ -15,7 +15,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify({
-      items: groups
+      items: todos
     })
   }
 }

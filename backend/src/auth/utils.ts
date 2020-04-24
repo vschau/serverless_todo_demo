@@ -7,7 +7,19 @@ import { JwtPayload } from './JwtPayload'
  * @param jwtToken JWT token to parse
  * @returns a user id from the JWT token
  */
-export function parseUserId(jwtToken: string): string {
+// export function parseUserId(jwtToken: string): string {
+//   const decodedJwt = decode(jwtToken) as JwtPayload
+//   return decodedJwt.sub
+// }
+
+export function parseUserId(authorization: string): string {
+  const split = authorization.split(' ')
+  const jwtToken = split[1]
+
   const decodedJwt = decode(jwtToken) as JwtPayload
-  return decodedJwt.sub
+
+  if (!decodedJwt)
+    return '123';
+  return decodedJwt.sub;
 }
+
