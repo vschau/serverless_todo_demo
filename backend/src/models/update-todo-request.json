@@ -10,7 +10,7 @@
       "type": "string"
     },
     "done": {
-      "type": "string"
+      "type": "boolean"
     }
   },
   "required": [

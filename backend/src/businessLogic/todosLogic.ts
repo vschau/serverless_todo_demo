@@ -19,6 +19,13 @@ export async function getAllTodos(authorization: string): Promise<CreateTodoResp
         .map(mapToCreateTodoResponse);
 }
 
+export async function getTodoById(todoId: string, authorization: string): Promise<CreateTodoResponse> {
+  const userId = parseUserId(authorization);
+  const todo = await todoAccess.getTodoById(userId, todoId);
+  
+  return mapToCreateTodoResponse(todo);
+}
+
 export async function createTodo(createTodoRequest: CreateTodoRequest, authorization: string): Promise<CreateTodoResponse> {
   const itemId = uuid.v4()
   const userId = parseUserId(authorization)
@@ -35,41 +42,48 @@ export async function createTodo(createTodoRequest: CreateTodoRequest, authoriza
   return mapToCreateTodoResponse(todo);
 }
 
-export async function updateTodo(todoId: string, updateTodoRequest: UpdateTodoRequest, authorization: string) {
+export async function updateTodo(todoId: string, updateTodoRequest: UpdateTodoRequest, authorization: string): Promise<void> {
   const userId = parseUserId(authorization);
-  // const todo = await todoAccess.getTodoById(todoId);
-
-  // if (!todo)
-  //   throw new Error('Todo item doesn\'t exist')
+  const todo = await todoAccess.getTodoById(userId, todoId);
+  
+  if (!todo) {
+    throw new Error('Todo item doesn\'t exist')
+  }
 
   todoAccess.updateTodo(userId, todoId, {
     name: updateTodoRequest.name,
     dueDate: updateTodoRequest.dueDate,
     done: updateTodoRequest.done
   });
-
-  // if (updatedItem instanceof AWSError)
-  //   throw new Error('Todo item doesn\'t exist')
 }
 
-// todo: change any
-export async function deleteTodo(todoId: string, authorization: string) {
+export async function deleteTodo(todoId: string, authorization: string): Promise<void> {
   const userId = parseUserId(authorization);
-  // const todo = await todoAccess.getTodoById(todoId);
+  const todo = await todoAccess.getTodoById(userId, todoId);
+  
+  if (!todo) {
+    throw new Error('Todo item doesn\'t exist')
+  }
 
-  // if (!todo)
-  //   throw new Error('Todo item doesn\'t exist')
+  await todoAccess.deleteTodo(userId, todoId);
 
-  todoAccess.deleteTodo(userId, todoId);
-
-  // if (updatedItem instanceof AWSError)
-  //   throw new Error('Todo item doesn\'t exist')
+  // delete image
+  try {
+    await todoAccess.deleteS3Image(todoId);
+  } catch {}
 }
 
 // todo: how do I update the attachment url? or where?
-export async function generateUploadUrl(todoId: string): Promise<string>{
+export async function generateUploadUrl(todoId: string, authorization: string): Promise<string>{
+  const userId = parseUserId(authorization);
+  const todo = await todoAccess.getTodoById(userId, todoId);
+  
+  if (!todo) {
+    throw new Error('Todo item doesn\'t exist')
+  }
+
   const signedUrl = todoAccess.generateUploadUrl(todoId);
-  await todoAccess.updateTodoUrl(todoId);
+  await todoAccess.updateTodoUrl(userId, todoId);
   return signedUrl;
 }
 
@@ -83,4 +97,3 @@ function mapToCreateTodoResponse(data: TodoItem): CreateTodoResponse {
     attachmentUrl: data.attachmentUrl
   } as CreateTodoResponse;
 }
-
